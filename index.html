@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#006634" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="description" content="体育场馆预约页面：查看未来三天的可预约日期与时段。" />
+    <title>中山大学体育场馆预约系统</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="appbar">
+        <div class="appbar-left" aria-hidden="true">
+          <svg class="back-icon" viewBox="0 0 32 32" fill="none"><path d="M26 16H5m0 0L15 6M5 16l10 10" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="close-icon" viewBox="0 0 32 32" fill="none"><path d="M7 7l18 18M25 7 7 25" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <span class="appbar-title">中山大学体育场馆预约系统</span>
+        <button class="menu-icon" id="open-settings" type="button" aria-label="调整每日名额" title="调整每日名额">⋮</button>
+      </div>
+      <div class="brandbar">
+        <div class="brandbar-inner">
+          <img class="school-logo" src="./assets/sysu-logo.png" alt="中山大学校徽与校名字标" />
+          <div class="account-actions">
+            <button id="go-bookings" type="button">我的账号</button>
+            <button id="logout-button" type="button">登出</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section class="booking-card" aria-labelledby="venue-heading">
+        <div class="card-heading">
+          <h1 id="venue-heading">场地选择</h1>
+          <button class="return-button" id="return-button" type="button">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m2 11 10-8 10 8v10H15v-7H9v7H2V11Z" fill="currentColor"/></svg>
+            返回
+          </button>
+        </div>
+
+        <div class="card-content">
+          <img class="venue-photo" src="./assets/gym.jpg" alt="深圳校区健身房内的动感单车与健身设备" />
+          <div class="venue-copy">
+            <h2>深圳校区健身房</h2>
+            <p>深圳校区体育馆</p>
+          </div>
+
+          <button class="queue-button" id="queue-button" type="button">候补排队</button>
+          <div class="date-tabs" id="date-tabs" role="tablist" aria-label="可预约日期"></div>
+
+          <div class="slot-board" aria-label="预约时段">
+            <div class="slot-board-head"><span>场次/场地</span><strong>场地1</strong></div>
+            <div id="slot-list" aria-live="polite"></div>
+          </div>
+          <span id="selected-date-label" hidden></span>
+
+          <section class="reservations-section" id="my-reservations" aria-labelledby="reservations-heading">
+            <h2 id="reservations-heading">我的预约 <span id="active-count" hidden>0</span></h2>
+            <div class="reservation-list" id="active-reservations" aria-live="polite"></div>
+            <div class="history-panel">
+              <h2>历史预约 <span id="history-count" hidden>0</span></h2>
+              <div class="reservation-list" id="history-reservations"></div>
+            </div>
+          </section>
+        </div>
+      </section>
+      <p class="demo-footer">界面演示 · 不连接学校正式预约系统 · 数据仅保存在当前设备</p>
+      <div class="home-indicator" aria-hidden="true"></div>
+    </main>
+
+    <dialog class="confirm-dialog" id="cancel-dialog" aria-labelledby="cancel-title">
+      <form method="dialog">
+        <h2 id="cancel-title">取消这条预约？</h2>
+        <p id="cancel-description"></p>
+        <div class="dialog-actions">
+          <button class="button-muted" value="keep" type="submit">保留预约</button>
+          <button class="button-danger" value="cancel" type="submit">确认取消</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog class="settings-dialog" id="settings-dialog" aria-labelledby="settings-title">
+      <form id="settings-form">
+        <div class="settings-heading">
+          <h2 id="settings-title" tabindex="-1">调整预约名额</h2>
+          <button class="settings-close" id="settings-close" type="button" aria-label="关闭设置">×</button>
+        </div>
+        <p class="settings-note">可输入负数。剩余名额为 0 或负数时，当天未开始的时段都会显示“已约”。设置仅保存在此浏览器。</p>
+        <div class="settings-section-title">每天剩余名额</div>
+        <div class="quota-settings" id="quota-settings"></div>
+        <div class="settings-section-title slot-settings-title">单独设置约满时段</div>
+        <label class="settings-date-label" for="settings-date-select">选择日期</label>
+        <select id="settings-date-select"></select>
+        <div class="slot-settings" id="slot-settings"></div>
+        <p class="settings-error" id="settings-error" role="alert" hidden></p>
+        <div class="settings-actions">
+          <button class="button-muted" id="settings-cancel" type="button">取消</button>
+          <button class="button-save" type="submit">保存设置</button>
+        </div>
+      </form>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="./app.mjs"></script>
+  </body>
+</html>
