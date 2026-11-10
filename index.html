@@ -23,7 +23,7 @@
         <div class="brandbar-inner">
           <img class="school-logo" src="./assets/sysu-logo.png" alt="中山大学校徽与校名字标" />
           <div class="account-actions">
-            <button id="go-bookings" type="button">我的账号</button>
+            <button id="go-bookings" type="button" aria-haspopup="dialog" aria-controls="account-dialog">我的账号</button>
             <button id="logout-button" type="button">登出</button>
           </div>
         </div>
@@ -60,14 +60,7 @@
             <h2 id="reservations-heading" tabindex="-1">我的预约 <span id="active-count" hidden>0</span></h2>
             <div class="reservation-list" id="active-reservations" aria-live="polite"></div>
             <div class="history-panel">
-              <div class="history-heading">
-                <h2>历史预约 <span id="history-count">0</span></h2>
-                <button class="history-manage" id="manage-history" type="button" aria-expanded="false" aria-controls="history-toolbar">管理记录</button>
-              </div>
-              <div class="history-toolbar" id="history-toolbar" hidden>
-                <label class="history-select-all"><input id="select-all-history" type="checkbox" />全选</label>
-                <button class="history-delete" id="delete-selected-history" type="button" disabled>删除所选（0）</button>
-              </div>
+              <h2>历史预约</h2>
               <div class="reservation-list" id="history-reservations" aria-live="polite"></div>
             </div>
           </section>
@@ -76,6 +69,24 @@
       <div class="home-indicator" aria-hidden="true"></div>
     </main>
 
+    <dialog class="settings-dialog account-dialog" id="account-dialog" aria-labelledby="account-title">
+      <div class="settings-heading">
+        <h2 id="account-title" tabindex="-1">我的账号</h2>
+        <button class="settings-close" id="account-close" type="button" aria-label="关闭我的账号">×</button>
+      </div>
+      <p class="settings-note">在这里管理历史预约，可删除单条记录或勾选后批量删除。</p>
+      <section class="history-panel" aria-labelledby="account-history-title">
+        <div class="history-heading">
+          <h3 id="account-history-title">历史预约管理</h3>
+          <button class="history-manage" id="manage-history" type="button" aria-expanded="false" aria-controls="history-toolbar">管理记录</button>
+        </div>
+        <div class="history-toolbar" id="history-toolbar" hidden>
+          <label class="history-select-all"><input id="select-all-history" type="checkbox" />全选</label>
+          <button class="history-delete" id="delete-selected-history" type="button" disabled>删除所选（0）</button>
+        </div>
+        <div class="reservation-list" id="account-history-reservations" aria-live="polite"></div>
+      </section>
+    </dialog>
     <dialog class="confirm-dialog" id="cancel-dialog" aria-labelledby="cancel-title">
       <form method="dialog">
         <h2 id="cancel-title">取消这条预约？</h2>

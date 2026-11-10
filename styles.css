@@ -80,7 +80,8 @@ button:focus-visible { outline: 3px solid #f4a226; outline-offset: 2px; }
 .history-panel .reservation-card { padding-top: 13px; padding-bottom: 13px; }
 .history-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
 .history-heading h2 { margin: 0; }
-#history-count { color: #777; font-size: 15px; font-weight: 400; }
+.account-dialog .history-panel { margin-top: 0; padding: 15px; border-radius: 8px; background: #f0f0f0; }
+.account-dialog .history-heading h3 { margin: 0; font-size: 18px; }
 .history-manage { min-height: 36px; padding: 5px 9px; border: 1px solid #006634; border-radius: 5px; color: #006634; background: #fff; font-size: 14px; }
 .history-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
 .history-toolbar[hidden], .history-manage[hidden] { display: none; }

@@ -73,9 +73,9 @@ test("single deletion persists, preserves other bookings and quotas after reload
   assert.deepEqual(app.records().map((r) => r.id), ["cancelled", "keep", "active"]);
   assert.equal(app.storage.get(AVAILABILITY_KEY), quotas);
   assert.equal(app.run("readBookings().some(record => record.id === 'past')"), false);
-  assert.equal(app.element("#history-count").textContent, "2");
+  assert.equal(app.element("#history-reservations").children.length, 2);
   const reloaded = setup(app.storage);
-  assert.equal(reloaded.element("#history-count").textContent, "2");
+  assert.equal(reloaded.element("#history-reservations").children.length, 2);
   assert.equal(reloaded.run("bookings.some(record => record.id === 'past')"), false);
 });
 
@@ -116,7 +116,26 @@ test("select all excludes active bookings and ends with empty history", () => {
   assert.deepEqual(app.records().map((r) => r.id), ["active"]);
   assert.equal(app.element("#manage-history").hidden, true);
   assert.equal(app.element("#history-toolbar").hidden, true);
-  assert.equal(app.element("#history-count").textContent, "0");
+  assert.equal(app.run("bookings.filter(record => isHistorical(record)).length"), 0);
+});
+
+test("history controls appear only inside My Account and reset on closing", () => {
+  const app = setup();
+  const buttons = (element) => element.children.flatMap((child) =>
+    typeof child === "object" ? [...(child.type === "button" ? [child] : []), ...buttons(child)] : []
+  );
+  assert.equal(buttons(app.element("#history-reservations")).length, 0);
+  assert.equal(buttons(app.element("#account-history-reservations")).length, 3);
+  app.element("#go-bookings").fire("click");
+  assert.equal(app.element("#account-dialog").open, true);
+  app.element("#manage-history").fire("click");
+  assert.equal(app.element("#history-toolbar").hidden, false);
+  app.run('selectedHistoryIds.add("past"); updateHistoryControls()');
+  app.element("#account-close").fire("click");
+  assert.equal(app.element("#account-dialog").open, false);
+  assert.equal(app.element("#history-toolbar").hidden, true);
+  assert.equal(app.run("selectedHistoryIds.size"), 0);
+  assert.equal(buttons(app.element("#history-reservations")).length, 0);
 });
 
 test("storage write failure retains persisted and displayed history", () => {

@@ -18,7 +18,8 @@ const selectedDateLabel = document.querySelector("#selected-date-label");
 const activeList = document.querySelector("#active-reservations");
 const historyList = document.querySelector("#history-reservations");
 const activeCount = document.querySelector("#active-count");
-const historyCount = document.querySelector("#history-count");
+const accountDialog = document.querySelector("#account-dialog");
+const accountHistoryList = document.querySelector("#account-history-reservations");
 const manageHistory = document.querySelector("#manage-history");
 const historyToolbar = document.querySelector("#history-toolbar");
 const selectAllHistory = document.querySelector("#select-all-history");
@@ -280,7 +281,7 @@ function isHistorical(booking, now = new Date()) {
   return booking.status === "cancelled" || bookingEnd(booking) <= now;
 }
 
-function makeReservationCard(booking, historical) {
+function makeReservationCard(booking, historical, editable = false) {
   const slot = SLOTS.find((item) => item.id === booking.slotId);
   const card = document.createElement("article");
   card.className = `reservation-card${booking.id === newBookingId ? " is-new" : ""}`;
@@ -298,7 +299,7 @@ function makeReservationCard(booking, historical) {
   status.className = "status-pill";
   status.textContent = historical ? (booking.status === "cancelled" ? "已取消" : "已结束") : "预约成功";
   side.append(status);
-  if (historical) {
+  if (historical && editable) {
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "history-delete";
@@ -321,7 +322,7 @@ function makeReservationCard(booking, historical) {
       label.append(checkbox, "选择此记录");
       side.prepend(label);
     }
-  } else {
+  } else if (!historical) {
     const cancel = document.createElement("button");
     cancel.type = "button";
     cancel.className = "cancel-button";
@@ -329,7 +330,8 @@ function makeReservationCard(booking, historical) {
     cancel.addEventListener("click", () => askToCancel(booking));
     side.append(cancel);
   }
-  card.append(main, side);
+  card.append(main);
+  if (!historical || editable) card.append(side);
   return card;
 }
 
@@ -359,9 +361,9 @@ function renderReservations(now) {
     .sort((a, b) => bookingStart(b) - bookingStart(a));
 
   activeCount.textContent = String(active.length);
-  historyCount.textContent = String(history.length);
   activeList.replaceChildren(...(active.length ? active.map((booking) => makeReservationCard(booking, false)) : [makeEmptyState(false)]));
   historyList.replaceChildren(...(history.length ? history.map((booking) => makeReservationCard(booking, true)) : [makeEmptyState(true)]));
+  accountHistoryList.replaceChildren(...(history.length ? history.map((booking) => makeReservationCard(booking, true, true)) : [makeEmptyState(true)]));
   updateHistoryControls(now);
 }
 
@@ -431,7 +433,7 @@ deleteHistoryDialog.addEventListener("close", () => {
   renderAll();
   showToast(deletedCount ? `已删除 ${deletedCount} 条历史记录。` : "所选历史记录已被删除或发生变化，请重新选择。");
   if (!manageHistory.hidden) manageHistory.focus();
-  else document.querySelector("#reservations-heading").focus();
+  else document.querySelector("#account-title").focus();
 });
 
 function askToCancel(booking) {
@@ -594,7 +596,16 @@ document.querySelector("#settings-close").addEventListener("click", () => settin
 document.querySelector("#settings-cancel").addEventListener("click", () => settingsDialog.close());
 
 document.querySelector("#go-bookings").addEventListener("click", () => {
-  document.querySelector("#my-reservations").scrollIntoView({ behavior: "smooth", block: "start" });
+  bookings = readBookings() ?? bookings;
+  renderReservations(new Date());
+  accountDialog.showModal();
+  document.querySelector("#account-title").focus();
+});
+document.querySelector("#account-close").addEventListener("click", () => accountDialog.close());
+accountDialog.addEventListener("close", () => {
+  managingHistory = false;
+  selectedHistoryIds.clear();
+  renderReservations(new Date());
 });
 document.querySelector("#return-button").addEventListener("click", () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
