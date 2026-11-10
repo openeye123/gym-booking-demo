@@ -19,6 +19,12 @@ const activeList = document.querySelector("#active-reservations");
 const historyList = document.querySelector("#history-reservations");
 const activeCount = document.querySelector("#active-count");
 const historyCount = document.querySelector("#history-count");
+const manageHistory = document.querySelector("#manage-history");
+const historyToolbar = document.querySelector("#history-toolbar");
+const selectAllHistory = document.querySelector("#select-all-history");
+const deleteSelectedHistory = document.querySelector("#delete-selected-history");
+const deleteHistoryDialog = document.querySelector("#delete-history-dialog");
+const deleteHistoryDescription = document.querySelector("#delete-history-description");
 const cancelDialog = document.querySelector("#cancel-dialog");
 const cancelDescription = document.querySelector("#cancel-description");
 const settingsDialog = document.querySelector("#settings-dialog");
@@ -35,6 +41,9 @@ let selectedDate = dateKey(new Date());
 let pendingCancelId = null;
 let newBookingId = null;
 let settingsDraft = null;
+let managingHistory = false;
+const selectedHistoryIds = new Set();
+let pendingDeleteIds = [];
 let toastTimer;
 
 function readBookings() {
@@ -57,9 +66,9 @@ function readBookings() {
   }
 }
 
-function saveBookings() {
+function saveBookings(records = bookings) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
     return true;
   } catch {
     return false;
@@ -267,6 +276,10 @@ function bookingEnd(booking) {
   return slotDateTime(booking.date, slot.end);
 }
 
+function isHistorical(booking, now = new Date()) {
+  return booking.status === "cancelled" || bookingEnd(booking) <= now;
+}
+
 function makeReservationCard(booking, historical) {
   const slot = SLOTS.find((item) => item.id === booking.slotId);
   const card = document.createElement("article");
@@ -285,7 +298,30 @@ function makeReservationCard(booking, historical) {
   status.className = "status-pill";
   status.textContent = historical ? (booking.status === "cancelled" ? "已取消" : "已结束") : "预约成功";
   side.append(status);
-  if (!historical) {
+  if (historical) {
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "history-delete";
+    remove.textContent = "删除记录";
+    remove.setAttribute("aria-label", `删除 ${when.textContent} 的历史记录`);
+    remove.addEventListener("click", () => askToDeleteHistory([booking.id]));
+    side.append(remove);
+    if (managingHistory) {
+      const label = document.createElement("label");
+      label.className = "history-select";
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = selectedHistoryIds.has(booking.id);
+      checkbox.setAttribute("aria-label", `选择 ${when.textContent} 的历史记录`);
+      checkbox.addEventListener("change", () => {
+        if (checkbox.checked) selectedHistoryIds.add(booking.id);
+        else selectedHistoryIds.delete(booking.id);
+        updateHistoryControls();
+      });
+      label.append(checkbox, "选择此记录");
+      side.prepend(label);
+    }
+  } else {
     const cancel = document.createElement("button");
     cancel.type = "button";
     cancel.className = "cancel-button";
@@ -319,14 +355,84 @@ function renderReservations(now) {
     .filter((booking) => booking.status === "active" && bookingEnd(booking) > now)
     .sort((a, b) => bookingStart(a) - bookingStart(b));
   const history = bookings
-    .filter((booking) => booking.status === "cancelled" || bookingEnd(booking) <= now)
+    .filter((booking) => isHistorical(booking, now))
     .sort((a, b) => bookingStart(b) - bookingStart(a));
 
   activeCount.textContent = String(active.length);
   historyCount.textContent = String(history.length);
   activeList.replaceChildren(...(active.length ? active.map((booking) => makeReservationCard(booking, false)) : [makeEmptyState(false)]));
   historyList.replaceChildren(...(history.length ? history.map((booking) => makeReservationCard(booking, true)) : [makeEmptyState(true)]));
+  updateHistoryControls(now);
 }
+
+function updateHistoryControls(now = new Date()) {
+  const ids = new Set(bookings.filter((booking) => isHistorical(booking, now)).map((booking) => booking.id));
+  for (const id of selectedHistoryIds) {
+    if (!ids.has(id)) selectedHistoryIds.delete(id);
+  }
+  if (!ids.size) managingHistory = false;
+  manageHistory.hidden = !ids.size;
+  manageHistory.textContent = managingHistory ? "完成" : "管理记录";
+  manageHistory.setAttribute("aria-expanded", String(managingHistory));
+  historyToolbar.hidden = !managingHistory;
+  selectAllHistory.checked = ids.size > 0 && selectedHistoryIds.size === ids.size;
+  selectAllHistory.indeterminate = selectedHistoryIds.size > 0 && selectedHistoryIds.size < ids.size;
+  deleteSelectedHistory.disabled = !selectedHistoryIds.size;
+  deleteSelectedHistory.textContent = `删除所选（${selectedHistoryIds.size}）`;
+}
+
+manageHistory.addEventListener("click", () => {
+  managingHistory = !managingHistory;
+  selectedHistoryIds.clear();
+  renderReservations(new Date());
+});
+selectAllHistory.addEventListener("change", () => {
+  selectedHistoryIds.clear();
+  const now = new Date();
+  if (selectAllHistory.checked) {
+    bookings.filter((booking) => isHistorical(booking, now)).forEach((booking) => selectedHistoryIds.add(booking.id));
+  }
+  renderReservations(now);
+});
+deleteSelectedHistory.addEventListener("click", () => askToDeleteHistory([...selectedHistoryIds]));
+
+function askToDeleteHistory(ids) {
+  const now = new Date();
+  pendingDeleteIds = bookings.filter((booking) => ids.includes(booking.id) && isHistorical(booking, now)).map((booking) => booking.id);
+  if (!pendingDeleteIds.length) return;
+  const record = bookings.find((booking) => booking.id === pendingDeleteIds[0]);
+  const slot = SLOTS.find((item) => item.id === record.slotId);
+  const detail = pendingDeleteIds.length === 1
+    ? `${longDateLabel(dateFromKey(record.date))} ${slot.start}–${slot.end} 的历史记录`
+    : `选中的 ${pendingDeleteIds.length} 条历史记录`;
+  deleteHistoryDescription.textContent = `将删除${detail}。删除后无法恢复，仅清理此浏览器中的历史，不影响当前预约和剩余名额。`;
+  deleteHistoryDialog.returnValue = "";
+  deleteHistoryDialog.showModal();
+}
+
+deleteHistoryDialog.addEventListener("close", () => {
+  const ids = new Set(pendingDeleteIds);
+  pendingDeleteIds = [];
+  if (deleteHistoryDialog.returnValue !== "delete" || !ids.size) return;
+  // Re-read before deleting so records added in another tab are preserved.
+  const latest = readBookings();
+  if (latest === null) {
+    showToast("无法读取历史记录，未删除。请检查浏览器存储权限后重试。");
+    return;
+  }
+  const now = new Date();
+  const remaining = latest.filter((booking) => !ids.has(booking.id) || !isHistorical(booking, now));
+  const deletedCount = latest.length - remaining.length;
+  if (!saveBookings(remaining)) {
+    showToast("删除未保存，记录已保留。请检查浏览器存储权限后重试。");
+    return;
+  }
+  bookings = remaining;
+  renderAll();
+  showToast(deletedCount ? `已删除 ${deletedCount} 条历史记录。` : "所选历史记录已被删除或发生变化，请重新选择。");
+  if (!manageHistory.hidden) manageHistory.focus();
+  else document.querySelector("#reservations-heading").focus();
+});
 
 function askToCancel(booking) {
   const slot = SLOTS.find((item) => item.id === booking.slotId);

@@ -57,11 +57,18 @@
           <span id="selected-date-label" hidden></span>
 
           <section class="reservations-section" id="my-reservations" aria-labelledby="reservations-heading">
-            <h2 id="reservations-heading">我的预约 <span id="active-count" hidden>0</span></h2>
+            <h2 id="reservations-heading" tabindex="-1">我的预约 <span id="active-count" hidden>0</span></h2>
             <div class="reservation-list" id="active-reservations" aria-live="polite"></div>
             <div class="history-panel">
-              <h2>历史预约 <span id="history-count" hidden>0</span></h2>
-              <div class="reservation-list" id="history-reservations"></div>
+              <div class="history-heading">
+                <h2>历史预约 <span id="history-count">0</span></h2>
+                <button class="history-manage" id="manage-history" type="button" aria-expanded="false" aria-controls="history-toolbar">管理记录</button>
+              </div>
+              <div class="history-toolbar" id="history-toolbar" hidden>
+                <label class="history-select-all"><input id="select-all-history" type="checkbox" />全选</label>
+                <button class="history-delete" id="delete-selected-history" type="button" disabled>删除所选（0）</button>
+              </div>
+              <div class="reservation-list" id="history-reservations" aria-live="polite"></div>
             </div>
           </section>
         </div>
@@ -76,6 +83,16 @@
         <div class="dialog-actions">
           <button class="button-muted" value="keep" type="submit">保留预约</button>
           <button class="button-danger" value="cancel" type="submit">确认取消</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog class="confirm-dialog" id="delete-history-dialog" aria-labelledby="delete-history-title" aria-describedby="delete-history-description">
+      <form method="dialog">
+        <h2 id="delete-history-title">删除历史记录？</h2>
+        <p id="delete-history-description"></p>
+        <div class="dialog-actions">
+          <button class="button-muted" value="keep" type="submit" autofocus>保留记录</button>
+          <button class="button-danger" value="delete" type="submit">确认删除</button>
         </div>
       </form>
     </dialog>

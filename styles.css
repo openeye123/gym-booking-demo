@@ -78,7 +78,18 @@ button:focus-visible { outline: 3px solid #f4a226; outline-offset: 2px; }
 .history-panel { margin-top: 42px; }
 .history-panel h2 { margin-bottom: 24px; }
 .history-panel .reservation-card { padding-top: 13px; padding-bottom: 13px; }
-.history-panel .reservation-card-side { display: none; }
+.history-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+.history-heading h2 { margin: 0; }
+#history-count { color: #777; font-size: 15px; font-weight: 400; }
+.history-manage { min-height: 36px; padding: 5px 9px; border: 1px solid #006634; border-radius: 5px; color: #006634; background: #fff; font-size: 14px; }
+.history-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.history-toolbar[hidden], .history-manage[hidden] { display: none; }
+.history-select-all, .history-select { display: flex; align-items: center; gap: 6px; min-height: 36px; font-size: 14px; cursor: pointer; }
+.history-select-all input, .history-select input { width: 18px; height: 18px; margin: 0; accent-color: #006634; }
+.history-panel .reservation-card-side { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.history-delete { min-height: 36px; margin-left: auto; padding: 6px 9px; border: 1px solid #d9363d; border-radius: 5px; color: #bd2930; background: #fff; font-size: 14px; }
+.history-delete:hover:not(:disabled) { background: #fff1f2; }
+.history-delete:disabled { border-color: #ccc; color: #999; cursor: default; }
 .empty-state { min-height: 73px; color: #999; font-size: 16px; }
 .empty-state strong { display: block; color: #777; font-weight: 400; }
 .empty-state p { margin: 6px 0 0; font-size: 13px; }
